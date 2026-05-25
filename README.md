@@ -19,10 +19,28 @@ It can:
 - Python dependency:
   - `requests`
 
-Install dependency:
+Install dependencies:
 
 ```bash
-python3 -m pip install requests
+python3 -m pip install -r requirements.txt
+```
+
+Optional development/build tooling:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+```
+
+Install as a package (editable mode):
+
+```bash
+python3 -m pip install -e .
+```
+
+After installation, you can use the console command directly:
+
+```bash
+misp-modules-cli --help
 ```
 
 ## Quick start
