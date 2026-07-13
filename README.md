@@ -9,7 +9,7 @@ It can:
 - Auto-detect likely MISP attribute types from a raw value.
 - Query matching expansion modules.
 - Restrict queries to one or more specific modules.
-- List supported input types from live module introspection.
+- List supported input types and active module/type mappings from live module introspection.
 - Store per-module configuration (API keys, usernames, etc.) in a local config file.
 
 ## Requirements
@@ -45,12 +45,16 @@ misp-modules-cli --help
 
 ## Quick start
 
-### 1) List supported input types
+### 1) List supported input types and active modules
 
 ```bash
 python3 bin/cli.py --list-supported-types
 python3 bin/cli.py --list-supported-types --verbose-types
+python3 bin/cli.py --list-active-modules
+python3 bin/cli.py --list-active-modules --verbose-types
 ```
+
+`--list-supported-types` groups active modules by supported attribute type. `--list-active-modules` shows the inverse view: active modules with the supported attribute types declared by each module.
 
 ### 2) Query with automatic type guessing
 
@@ -126,6 +130,9 @@ python3 bin/cli.py --config-file /path/to/config.json ...
 
 - `--url` – base URL of `misp-modules` service.
 - `--describe-types-url` – URL to MISP `describeTypes.json`.
+- `--list-supported-types` – list supported input attribute types and the active modules supporting each type.
+- `--list-active-modules` – list active expansion modules and the input attribute types each module supports.
+- `--verbose-types` – expand nested details for `--list-supported-types` or `--list-active-modules`.
 - `--show-guesses` – show guessed attribute types.
 - `--all-guesses` – query all guessed types (instead of only the best match).
 - `--raw` – print raw JSON responses.

@@ -111,6 +111,19 @@ def get_type_to_modules_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str
     return mapping
 
 
+def get_module_to_types_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    mapping: Dict[str, List[str]] = {}
+    for module in get_expansion_modules(modules):
+        name = module.get("name", "<unknown>")
+        mispattributes = module.get("mispattributes", {})
+        inputs = mispattributes.get("input", [])
+        if not isinstance(inputs, list):
+            mapping.setdefault(name, [])
+            continue
+        mapping[name] = sorted({t for t in inputs if isinstance(t, str)})
+    return dict(sorted(mapping.items()))
+
+
 def find_modules_for_type(modules: List[Dict[str, Any]], attr_type: str) -> List[Dict[str, Any]]:
     matches = []
     for module in get_expansion_modules(modules):
@@ -496,6 +509,28 @@ def list_supported_types(modules: List[Dict[str, Any]], valid_types: set[str], v
                 log(f"    - {module_name}")
 
 
+def list_active_modules(modules: List[Dict[str, Any]], valid_types: set[str], verbose: bool = False) -> None:
+    mapping = get_module_to_types_map(modules)
+
+    if not mapping:
+        log("No active expansion modules found in module introspection.")
+        return
+
+    log("Active expansion modules and supported input attribute types:\n")
+    for module_name in sorted(mapping):
+        supported_types = mapping[module_name]
+        log(f"- {module_name} ({len(supported_types)} supported type(s))")
+        if not supported_types:
+            log("    - (no supported input types declared)")
+            continue
+        if verbose:
+            for attr_type in supported_types:
+                marker = "valid" if attr_type in valid_types else "unknown"
+                log(f"    - {attr_type} [{marker}]")
+        else:
+            log(f"    - {', '.join(supported_types)}")
+
+
 def get_module_config_keys(module: Dict[str, Any]) -> List[str]:
     moduleconfig = module.get("meta").get("config")
     if isinstance(moduleconfig, list):
@@ -750,9 +785,14 @@ def main() -> int:
         help="List input attribute types supported by installed expansion modules and exit",
     )
     parser.add_argument(
+        "--list-active-modules",
+        action="store_true",
+        help="List active expansion modules with the input attribute types each module supports and exit",
+    )
+    parser.add_argument(
         "--verbose-types",
         action="store_true",
-        help="With --list-supported-types, also list the modules supporting each type",
+        help="With --list-supported-types or --list-active-modules, expand the nested details",
     )
     parser.add_argument(
         "--config-file",
@@ -818,6 +858,10 @@ def main() -> int:
         list_supported_types(modules, valid_types, verbose=args.verbose_types)
         return 0
 
+    if args.list_active_modules:
+        list_active_modules(modules, valid_types, verbose=args.verbose_types)
+        return 0
+
     if args.configure_module:
         try:
             set_values = parse_set_args(args.set)
@@ -827,7 +871,7 @@ def main() -> int:
             return 1
 
     if not args.value:
-        print("[!] --value is required unless --list-supported-types is used", file=sys.stderr)
+        print("[!] --value is required unless --list-supported-types or --list-active-modules is used", file=sys.stderr)
         return 1
 
     try:
