@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      attestations: write
     environment:
       name: pypi
       url: https://pypi.org/p/misp-modules-cli
