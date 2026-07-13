@@ -847,12 +847,14 @@ def main() -> int:
         print(f"[!] Unable to fetch module introspection from {args.url}/modules: {e}", file=sys.stderr)
         return 1
 
-    try:
-        describe_types = fetch_describe_types(args.describe_types_url)
-        valid_types = get_valid_types(describe_types)
-    except Exception as e:
-        print(f"[!] Unable to fetch describeTypes.json: {e}", file=sys.stderr)
-        return 1
+    valid_types = set()
+    if args.list_supported_types or args.verbose_types or not args.list_active_modules:
+        try:
+            describe_types = fetch_describe_types(args.describe_types_url)
+            valid_types = get_valid_types(describe_types)
+        except Exception as e:
+            print(f"[!] Unable to fetch describeTypes.json: {e}", file=sys.stderr)
+            return 1
 
     if args.list_supported_types:
         list_supported_types(modules, valid_types, verbose=args.verbose_types)
