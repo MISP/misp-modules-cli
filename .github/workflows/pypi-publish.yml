@@ -50,7 +50,63 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Remove distributions already on PyPI
+        id: filter-existing
+        run: |
+          python <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.error import HTTPError
+          from urllib.parse import unquote, urlparse
+          from urllib.request import urlopen
+
+          project = "misp-modules-cli"
+          dist_dir = Path("dist")
+          api_url = f"https://pypi.org/pypi/{project}/json"
+
+          try:
+              with urlopen(api_url, timeout=30) as response:
+                  payload = json.load(response)
+          except HTTPError as exc:
+              if exc.code == 404:
+                  existing_filenames = set()
+              else:
+                  raise
+
+          if "existing_filenames" not in locals():
+              existing_filenames = {
+                  unquote(Path(urlparse(file_info["url"]).path).name)
+                  for files in payload.get("releases", {}).values()
+                  for file_info in files
+              }
+
+          removed = []
+          for artifact in dist_dir.iterdir():
+              if artifact.is_file() and artifact.name in existing_filenames:
+                  artifact.unlink()
+                  removed.append(artifact.name)
+
+          if removed:
+              print("Already present on PyPI; skipping upload for:")
+              for filename in removed:
+                  print(f"- {filename}")
+
+          remaining = sorted(path.name for path in dist_dir.iterdir() if path.is_file())
+          has_files = "true" if remaining else "false"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"has-files={has_files}\n")
+
+          if remaining:
+              print("Remaining distributions to publish:")
+              for filename in remaining:
+                  print(f"- {filename}")
+          else:
+              print("No new distributions to publish.")
+          PY
+
       - name: Publish package to PyPI
+        if: steps.filter-existing.outputs.has-files == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          skip-existing: "true"
+          skip-existing: true
