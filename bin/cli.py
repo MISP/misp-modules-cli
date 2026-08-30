@@ -180,7 +180,11 @@ def looks_like_email(value: str) -> bool:
 
 
 def looks_like_asn(value: str) -> bool:
-    return bool(re.match(r"^(AS)?\d{1,10}$", value, re.IGNORECASE))
+    return bool(re.match(r"^AS\d{1,10}$", value, re.IGNORECASE))
+
+
+def looks_like_bare_asn_digits(value: str) -> bool:
+    return bool(re.match(r"^\d{1,10}$", value))
 
 
 def looks_like_cve(value: str) -> bool:
@@ -286,6 +290,8 @@ def guess_attribute_types(value: str, valid_types: set[str], supported_input_typ
 
     if looks_like_asn(v):
         add("AS", "matches ASN syntax", 90)
+    elif looks_like_bare_asn_digits(v):
+        add("AS", "bare digits could be an ASN without the 'AS' prefix", 20)
 
     if looks_like_domain(v):
         add("domain", "looks like a domain name", 85)
