@@ -669,6 +669,21 @@ def set_cached_response(cache: Dict[str, Any], key: str, response: Dict[str, Any
     }
 
 
+def prune_expired_entries(cache: Dict[str, Any], now: int, ttl_seconds: int) -> int:
+    entries = cache.get("entries", {})
+    if not isinstance(entries, dict):
+        return 0
+    expired_keys = [
+        key for key, entry in entries.items()
+        if not isinstance(entry, dict)
+        or not isinstance(entry.get("cached_at"), int)
+        or now - entry.get("cached_at", 0) > ttl_seconds
+    ]
+    for key in expired_keys:
+        del entries[key]
+    return len(expired_keys)
+
+
 def configure_module(
     modules: List[Dict[str, Any]],
     config_path: str,
@@ -1086,6 +1101,11 @@ def main() -> int:
             with open(args.markdown_output, "w", encoding="utf-8") as f:
                 f.write(markdown_report)
             log(f"Wrote markdown report to {args.markdown_output}")
+
+    pruned = prune_expired_entries(cache, now=int(time.time()), ttl_seconds=args.cache_ttl_seconds)
+    if pruned:
+        log(f"Pruned {pruned} expired cache entr{'y' if pruned == 1 else 'ies'}.")
+        cache_dirty = True
 
     if cache_dirty:
         try:
