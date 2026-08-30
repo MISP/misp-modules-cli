@@ -2,6 +2,7 @@
 
 import argparse
 from datetime import datetime, timezone
+import getpass
 import ipaddress
 import json
 import os
@@ -699,7 +700,7 @@ def configure_module(
         except Exception:
             pass
         prompt = f"Set value for '{key}' (leave blank to keep {current}): "
-        value = input(prompt).strip()
+        value = getpass.getpass(prompt).strip()
         if value:
             updates[key] = value
 
