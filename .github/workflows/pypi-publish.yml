@@ -24,6 +24,12 @@ jobs:
       - name: Install build dependencies
         run: python -m pip install --upgrade build
 
+      - name: Set version from release tag
+        if: github.event_name == 'release'
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version = \".*\"/version = \"${version}\"/" pyproject.toml
+
       - name: Build sdist and wheel
         run: python -m build
 
@@ -104,6 +110,12 @@ jobs:
           else:
               print("No new distributions to publish.")
           PY
+
+      - name: Fail if a release has nothing new to publish
+        if: github.event_name == 'release' && steps.filter-existing.outputs.has-files != 'true'
+        run: |
+          echo "::error::Release ${GITHUB_REF_NAME} produced no new distributions to publish (version unchanged from an existing PyPI release?)."
+          exit 1
 
       - name: Publish package to PyPI
         if: steps.filter-existing.outputs.has-files == 'true'
