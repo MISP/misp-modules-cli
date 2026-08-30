@@ -2,6 +2,7 @@
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import ipaddress
 import json
 import os
@@ -634,7 +635,8 @@ def make_cache_key(base_url: str, module_name: str, attr_type: str, value: str, 
         "value": value,
         "module_config": module_config,
     }
-    return json.dumps(key_payload, sort_keys=True, separators=(",", ":"))
+    canonical = json.dumps(key_payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def get_cached_response(
@@ -665,7 +667,7 @@ def set_cached_response(cache: Dict[str, Any], key: str, response: Dict[str, Any
         entries = cache["entries"]
     entries[key] = {
         "cached_at": now,
-        "response": response,
+        "response": redact_config_keys(response),
     }
 
 
