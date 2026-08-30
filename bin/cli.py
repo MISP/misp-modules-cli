@@ -832,7 +832,10 @@ def main() -> int:
     )
 
     args = parser.parse_args()
-    suppress_standard_json_output = args.markdown_output is not None
+    # Only the markdown report going to stdout (default "-") competes with the
+    # standard JSON output; a markdown report written to a file leaves stdout
+    # free for --raw/--unified-output.
+    suppress_standard_json_output = args.markdown_output == "-"
 
     if args.cache_ttl_seconds < 0:
         print("[!] --cache-ttl-seconds must be >= 0", file=sys.stderr)
