@@ -18,6 +18,12 @@ It can:
 - `misp-modules` running and reachable (default: `http://127.0.0.1:6666`)
 - Python dependency:
   - `requests`
+- Network access to `raw.githubusercontent.com` to fetch MISP's `describeTypes.json`
+  (`--describe-types-url`), used to validate/guess attribute types and for
+  `--list-supported-types`/`--list-active-modules`/`--verbose-types`. This fetch is
+  cached locally (see `--cache-file`/`--cache-ttl-seconds`) and is skipped entirely
+  when you pass an explicit `--type`, so fully-specified queries work without it
+  (e.g. in air-gapped environments).
 
 Install dependencies:
 
