@@ -9,9 +9,14 @@ permissions:
   contents: read
 
 jobs:
+  test:
+    name: Lint & test
+    uses: ./.github/workflows/ci.yml
+
   build:
     name: Build distribution
     runs-on: ubuntu-latest
+    needs: test
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
