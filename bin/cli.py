@@ -45,7 +45,10 @@ def fetch_describe_types(describe_types_url: str, timeout: int = 20) -> Dict[str
     data = fetch_json(describe_types_url, timeout=timeout)
     if not isinstance(data, dict) or "result" not in data:
         raise RuntimeError("Unexpected describeTypes.json format")
-    return data["result"]
+    result = data["result"]
+    if not isinstance(result, dict):
+        raise RuntimeError("Unexpected describeTypes.json format")
+    return result
 
 
 def is_empty_module_response(response: Any) -> bool:
@@ -80,13 +83,13 @@ def get_valid_types(describe_types: Dict[str, Any]) -> set[str]:
 
 
 def get_expansion_modules(modules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    return [m for m in modules if m.get("type") == "expansion"]
+    return [m for m in modules if isinstance(m, dict) and m.get("type") == "expansion"]
 
 
 def get_supported_input_types(modules: List[Dict[str, Any]]) -> set[str]:
     supported = set()
     for module in get_expansion_modules(modules):
-        mispattributes = module.get("mispattributes", {})
+        mispattributes = (module.get("mispattributes") or {})
         inputs = mispattributes.get("input", [])
         if isinstance(inputs, list):
             supported.update(t for t in inputs if isinstance(t, str))
@@ -97,7 +100,7 @@ def get_type_to_modules_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str
     mapping: Dict[str, List[str]] = {}
     for module in get_expansion_modules(modules):
         name = module.get("name", "<unknown>")
-        mispattributes = module.get("mispattributes", {})
+        mispattributes = (module.get("mispattributes") or {})
         inputs = mispattributes.get("input", [])
         if not isinstance(inputs, list):
             continue
@@ -115,7 +118,7 @@ def get_module_to_types_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str
     mapping: Dict[str, List[str]] = {}
     for module in get_expansion_modules(modules):
         name = module.get("name", "<unknown>")
-        mispattributes = module.get("mispattributes", {})
+        mispattributes = (module.get("mispattributes") or {})
         inputs = mispattributes.get("input", [])
         if not isinstance(inputs, list):
             mapping.setdefault(name, [])
@@ -127,7 +130,7 @@ def get_module_to_types_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str
 def find_modules_for_type(modules: List[Dict[str, Any]], attr_type: str) -> List[Dict[str, Any]]:
     matches = []
     for module in get_expansion_modules(modules):
-        mispattributes = module.get("mispattributes", {})
+        mispattributes = (module.get("mispattributes") or {})
         inputs = mispattributes.get("input", [])
         if isinstance(inputs, list) and attr_type in inputs:
             matches.append(module)
@@ -311,7 +314,7 @@ def guess_attribute_types(value: str, valid_types: set[str], supported_input_typ
 
 
 def uses_misp_standard_format(module: Dict[str, Any]) -> bool:
-    mispattributes = module.get("mispattributes", {})
+    mispattributes = (module.get("mispattributes") or {})
     module_format = mispattributes.get("format")
     return isinstance(module_format, str) and module_format.lower() == "misp_standard"
 
@@ -489,7 +492,7 @@ def print_matches_for_type(attr_type: str, modules: List[Dict[str, Any]]) -> Non
     log(f"Found {len(modules)} module(s):")
     for module in modules:
         name = module.get("name", "<unknown>")
-        desc = module.get("meta", {}).get("description", "")
+        desc = (module.get("meta") or {}).get("description", "")
         log(f"  - {name}: {desc}")
 
 
@@ -532,7 +535,7 @@ def list_active_modules(modules: List[Dict[str, Any]], valid_types: set[str], ve
 
 
 def get_module_config_keys(module: Dict[str, Any]) -> List[str]:
-    moduleconfig = module.get("meta").get("config")
+    moduleconfig = (module.get("meta") or {}).get("config")
     if isinstance(moduleconfig, list):
         return [k for k in moduleconfig if isinstance(k, str)]
     if isinstance(moduleconfig, dict):
