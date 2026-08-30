@@ -48,10 +48,10 @@ misp-modules-cli --help
 ### 1) List supported input types and active modules
 
 ```bash
-python3 bin/cli.py --list-supported-types
-python3 bin/cli.py --list-supported-types --verbose-types
-python3 bin/cli.py --list-active-modules
-python3 bin/cli.py --list-active-modules --verbose-types
+python3 -m misp_modules_cli.cli --list-supported-types
+python3 -m misp_modules_cli.cli --list-supported-types --verbose-types
+python3 -m misp_modules_cli.cli --list-active-modules
+python3 -m misp_modules_cli.cli --list-active-modules --verbose-types
 ```
 
 `--list-supported-types` groups active modules by supported attribute type. `--list-active-modules` shows the inverse view: active modules with the supported attribute types declared by each module.
@@ -59,39 +59,39 @@ python3 bin/cli.py --list-active-modules --verbose-types
 ### 2) Query with automatic type guessing
 
 ```bash
-python3 bin/cli.py --value 8.8.8.8 --show-guesses
-python3 bin/cli.py --value CVE-2024-3094 --show-guesses
+python3 -m misp_modules_cli.cli --value 8.8.8.8 --show-guesses
+python3 -m misp_modules_cli.cli --value CVE-2024-3094 --show-guesses
 ```
 
 ### 3) Query with an explicit MISP type
 
 ```bash
-python3 bin/cli.py --type domain --value circl.lu
+python3 -m misp_modules_cli.cli --type domain --value circl.lu
 ```
 
 ### 4) Restrict to selected modules
 
 ```bash
-python3 bin/cli.py --type domain --value circl.lu --module circl_passivedns
-python3 bin/cli.py --type domain --value circl.lu --module circl_passivedns,dns
-python3 bin/cli.py --type domain --value circl.lu --module circl_passivedns --module dns
+python3 -m misp_modules_cli.cli --type domain --value circl.lu --module circl_passivedns
+python3 -m misp_modules_cli.cli --type domain --value circl.lu --module circl_passivedns,dns
+python3 -m misp_modules_cli.cli --type domain --value circl.lu --module circl_passivedns --module dns
 ```
 
 ### 5) Emit unified JSON output from all queried modules
 
 ```bash
-python3 bin/cli.py --value 8.8.8.8 --unified-output
-python3 bin/cli.py --type domain --value circl.lu --module circl_passivedns,dns --unified-output
+python3 -m misp_modules_cli.cli --value 8.8.8.8 --unified-output
+python3 -m misp_modules_cli.cli --type domain --value circl.lu --module circl_passivedns,dns --unified-output
 ```
 
 ### 6) Emit markdown report output with summary + full query details
 
 ```bash
 # Print markdown report to stdout
-python3 bin/cli.py --value 8.8.8.8 --markdown-output
+python3 -m misp_modules_cli.cli --value 8.8.8.8 --markdown-output
 
 # Write markdown report to a file
-python3 bin/cli.py --type domain --value circl.lu --markdown-output report.md
+python3 -m misp_modules_cli.cli --type domain --value circl.lu --markdown-output report.md
 ```
 
 ## Module configuration
@@ -101,13 +101,13 @@ Some modules require settings (for example credentials or API keys). You can sto
 ### Interactive configuration
 
 ```bash
-python3 bin/cli.py --configure-module circl_passivedns
+python3 -m misp_modules_cli.cli --configure-module circl_passivedns
 ```
 
 ### Non-interactive configuration
 
 ```bash
-python3 bin/cli.py --configure-module circl_passivedns \
+python3 -m misp_modules_cli.cli --configure-module circl_passivedns \
   --set username=my-user \
   --set password=my-pass
 ```
@@ -123,7 +123,7 @@ Default path:
 Override it per run:
 
 ```bash
-python3 bin/cli.py --config-file /path/to/config.json ...
+python3 -m misp_modules_cli.cli --config-file /path/to/config.json ...
 ```
 
 ## Useful options
@@ -159,19 +159,19 @@ To reduce API calls and improve response times, module query responses are cache
 You can override the cache TTL per run:
 
 ```bash
-python3 bin/cli.py --value 8.8.8.8 --cache-ttl-seconds 3600
+python3 -m misp_modules_cli.cli --value 8.8.8.8 --cache-ttl-seconds 3600
 ```
 
 Purge the local cache:
 
 ```bash
-python3 bin/cli.py --purge-cache
+python3 -m misp_modules_cli.cli --purge-cache
 ```
 
 See all CLI options:
 
 ```bash
-python3 bin/cli.py --help
+python3 -m misp_modules_cli.cli --help
 ```
 
 ## Exit behavior
