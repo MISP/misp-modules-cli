@@ -577,9 +577,11 @@ def save_config(config_path: str, config: Dict[str, Any]) -> None:
     config_dir = os.path.dirname(config_path)
     if config_dir:
         os.makedirs(config_dir, exist_ok=True)
-    with open(config_path, "w", encoding="utf-8") as f:
+    tmp_path = config_path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, sort_keys=True)
         f.write("\n")
+    os.replace(tmp_path, config_path)
 
 
 def parse_set_args(values: Optional[List[str]]) -> Dict[str, str]:
@@ -612,9 +614,11 @@ def save_cache(cache_path: str, cache: Dict[str, Any]) -> None:
     cache_dir = os.path.dirname(cache_path)
     if cache_dir:
         os.makedirs(cache_dir, exist_ok=True)
-    with open(cache_path, "w", encoding="utf-8") as f:
+    tmp_path = cache_path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2, sort_keys=True)
         f.write("\n")
+    os.replace(tmp_path, cache_path)
 
 
 def purge_cache(cache_path: str) -> int:
