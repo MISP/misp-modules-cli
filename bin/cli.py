@@ -532,7 +532,7 @@ def list_active_modules(modules: List[Dict[str, Any]], valid_types: set[str], ve
 
 
 def get_module_config_keys(module: Dict[str, Any]) -> List[str]:
-    moduleconfig = module.get("meta").get("config")
+    moduleconfig = (module.get("meta") or {}).get("config")
     if isinstance(moduleconfig, list):
         return [k for k in moduleconfig if isinstance(k, str)]
     if isinstance(moduleconfig, dict):
@@ -974,14 +974,14 @@ def main() -> int:
                 if isinstance(loaded_module_config, dict):
                     config = loaded_module_config
                     module_config["config"] = config
-            expected_keys = get_module_config_keys(module)
-            missing_keys = [k for k in expected_keys if k not in config]
-            if missing_keys:
-                log(
-                    f"note: missing config keys for module '{name}': {', '.join(sorted(missing_keys))}. "
-                    f"Run with --configure-module {name} to save them in {args.config_file}."
-                )
             try:
+                expected_keys = get_module_config_keys(module)
+                missing_keys = [k for k in expected_keys if k not in config]
+                if missing_keys:
+                    log(
+                        f"note: missing config keys for module '{name}': {', '.join(sorted(missing_keys))}. "
+                        f"Run with --configure-module {name} to save them in {args.config_file}."
+                    )
                 query_parameters = build_payload(module, name, attr_type, args.value)
                 if module_config:
                     query_parameters.update(module_config)
