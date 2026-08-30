@@ -653,7 +653,7 @@ def get_cached_response(
     response = entry.get("response")
     if not isinstance(cached_at, int) or response is None:
         return None
-    if now - cached_at > ttl_seconds:
+    if now - cached_at >= ttl_seconds:
         return None
     return {"cached_at": cached_at, "response": response}
 
