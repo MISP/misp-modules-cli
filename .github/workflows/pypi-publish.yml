@@ -57,7 +57,7 @@ jobs:
           import json
           import os
           from pathlib import Path
-          from urllib.error import HTTPError
+          from urllib.error import HTTPError, URLError
           from urllib.parse import unquote, urlparse
           from urllib.request import urlopen
 
@@ -73,6 +73,9 @@ jobs:
                   existing_filenames = set()
               else:
                   raise
+          except (URLError, json.JSONDecodeError) as exc:
+              print(f"Warning: could not query PyPI ({exc}); assuming no existing releases.")
+              existing_filenames = set()
 
           if "existing_filenames" not in locals():
               existing_filenames = {
