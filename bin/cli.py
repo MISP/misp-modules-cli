@@ -921,7 +921,10 @@ def main() -> int:
             log("No likely MISP attribute type could be guessed from the input.")
             return 1
 
-    candidate_types = [(t, r) for t, r in candidate_types if t in valid_types]
+    if not args.attr_type:
+        candidate_types = [(t, r) for t, r in candidate_types if t in valid_types]
+    else:
+        candidate_types = [(t, r) for t, r in candidate_types if t in valid_types or t in supported_input_types]
     if not candidate_types:
         log("No valid MISP attribute type found.")
         return 1
