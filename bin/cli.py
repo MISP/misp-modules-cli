@@ -2,6 +2,7 @@
 
 import argparse
 from datetime import datetime, timezone
+import html
 import ipaddress
 import json
 import os
@@ -364,7 +365,7 @@ def format_markdown_output(
     records: List[Dict[str, Any]]
 ) -> str:
     def scalar_to_text(value: Any) -> str:
-        return str(value)
+        return html.escape(str(value))
 
     def format_nested_value(value: Any, indent_level: int = 0) -> List[str]:
         indent_prefix = "&nbsp;" * (indent_level * 2)
@@ -376,10 +377,10 @@ def format_markdown_output(
                 child = value[key]
                 if isinstance(child, (dict, list)):
                     nested = format_nested_value(child, indent_level + 1)
-                    lines.append(f"{indent_prefix}{key}:")
+                    lines.append(f"{indent_prefix}{scalar_to_text(key)}:")
                     lines.extend(nested)
                 else:
-                    lines.append(f"{indent_prefix}{key}: {scalar_to_text(child)}")
+                    lines.append(f"{indent_prefix}{scalar_to_text(key)}: {scalar_to_text(child)}")
             return lines
         if isinstance(value, list):
             if not value:
@@ -398,7 +399,7 @@ def format_markdown_output(
     def to_inline(value: Any) -> str:
         if isinstance(value, (dict, list)):
             return "<br>".join(format_nested_value(value))
-        return str(value)
+        return scalar_to_text(value)
 
     def response_to_table(response: Any) -> List[str]:
         if isinstance(response, dict):
@@ -406,7 +407,7 @@ def format_markdown_output(
                 return ["| Key | Value |", "| --- | --- |", "| _(empty)_ |  |"]
             lines = ["| Key | Value |", "| --- | --- |"]
             for key in sorted(response.keys()):
-                safe_key = str(key).replace("\n", " ").replace("|", "\\|")
+                safe_key = scalar_to_text(key).replace("\n", " ").replace("|", "\\|")
                 safe_value = to_inline(response[key]).replace("\n", " ").replace("|", "\\|")
                 lines.append(f"| `{safe_key}` | {safe_value} |")
             return lines
@@ -418,7 +419,7 @@ def format_markdown_output(
                 safe_value = to_inline(item).replace("\n", " ").replace("|", "\\|")
                 lines.append(f"| `{idx}` | {safe_value} |")
             return lines
-        safe_value = str(response).replace("\n", " ").replace("|", "\\|")
+        safe_value = scalar_to_text(response).replace("\n", " ").replace("|", "\\|")
         return ["| Value |", "| --- |", f"| `{safe_value}` |"]
 
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
@@ -440,10 +441,10 @@ def format_markdown_output(
         "## Summary",
         "",
         f"- Generated at (UTC): `{generated_at}`",
-        f"- Input value: `{input_value}`",
-        f"- Explicit type: `{explicit_type or 'auto-guessed'}`",
+        f"- Input value: `{html.escape(input_value)}`",
+        f"- Explicit type: `{html.escape(explicit_type) if explicit_type else 'auto-guessed'}`",
         f"- Query all guesses: `{all_guesses}`",
-        f"- Selected modules filter: `{', '.join(selected_modules) if selected_modules else 'none'}`",
+        f"- Selected modules filter: `{html.escape(', '.join(selected_modules)) if selected_modules else 'none'}`",
         f"- Total module query attempts: `{len(records)}`",
         f"- Successful queries: `{success_count}`",
         f"- Failed queries: `{failed_count}`",
@@ -462,12 +463,12 @@ def format_markdown_output(
 
     for idx, record in enumerate(records, start=1):
         lines.extend([
-            f"### {idx}. Module `{record.get('module', '<unknown>')}` / Type `{record.get('attribute_type', '<unknown>')}`",
+            f"### {idx}. Module `{html.escape(str(record.get('module', '<unknown>')))}` / Type `{html.escape(str(record.get('attribute_type', '<unknown>')))}`",
             "",
-            f"- Status: `{record.get('status', 'unknown')}`",
-            f"- Query reason: `{record.get('reason', 'n/a')}`",
-            f"- Queried at (UTC): `{record.get('queried_at', 'n/a')}`",
-            f"- Cache: `{record.get('cache', 'n/a')}`",
+            f"- Status: `{html.escape(str(record.get('status', 'unknown')))}`",
+            f"- Query reason: `{html.escape(str(record.get('reason', 'n/a')))}`",
+            f"- Queried at (UTC): `{html.escape(str(record.get('queried_at', 'n/a')))}`",
+            f"- Cache: `{html.escape(str(record.get('cache', 'n/a')))}`",
             "",
             "#### Query Parameters",
             "",
