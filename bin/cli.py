@@ -1006,10 +1006,14 @@ def main() -> int:
                         args.value,
                         module_config=module_config
                     )
-                    set_cached_response(cache, cache_key, response, now=int(time.time()))
-                    cache_dirty = True
-                    cache_status = "miss"
-                    log("cache: miss")
+                    if isinstance(response, dict) and "error" in response:
+                        cache_status = "skipped (error response)"
+                        log("cache: skipped (error response)")
+                    else:
+                        set_cached_response(cache, cache_key, response, now=int(time.time()))
+                        cache_dirty = True
+                        cache_status = "miss"
+                        log("cache: miss")
                 any_queried = True
                 response_is_empty = is_empty_module_response(response)
                 include_in_output = args.show_empty_results or not response_is_empty
