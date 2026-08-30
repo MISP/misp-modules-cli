@@ -930,6 +930,7 @@ def main() -> int:
         candidate_types = candidate_types[:1]
 
     any_queried = False
+    any_query_failed = False
     cache_dirty = False
     try:
         cache = load_cache(args.cache_file)
@@ -1043,6 +1044,7 @@ def main() -> int:
                     elif include_in_output and not args.unified_output and not suppress_standard_json_output:
                         print(json.dumps(redacted_response, indent=2, sort_keys=True))
             except requests.HTTPError as e:
+                any_query_failed = True
                 log(f"HTTP error: {e}")
                 markdown_records.append({
                     "attribute_type": attr_type,
@@ -1056,6 +1058,7 @@ def main() -> int:
                     "response": {"error": str(e)},
                 })
             except Exception as e:
+                any_query_failed = True
                 log(f"query failed: {e}")
                 markdown_records.append({
                     "attribute_type": attr_type,
@@ -1096,6 +1099,8 @@ def main() -> int:
 
     if not any_queried:
         log("\nNo module query was executed successfully.")
+    if not any_queried or any_query_failed:
+        return 1
     return 0
 
 
