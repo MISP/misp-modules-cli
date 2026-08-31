@@ -20,10 +20,10 @@ dependencies = [
 Homepage = "https://github.com/MISP/misp-modules"
 
 [project.scripts]
-misp-modules-cli = "bin.cli:main"
+misp-modules-cli = "misp_modules_cli.cli:main"
 
 [tool.setuptools]
 include-package-data = false
 
 [tool.setuptools.packages.find]
-include = ["bin"]
+where = ["src"]
