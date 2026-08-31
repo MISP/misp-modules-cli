@@ -406,8 +406,8 @@ def format_markdown_output(
                 return ["| Key | Value |", "| --- | --- |", "| _(empty)_ |  |"]
             lines = ["| Key | Value |", "| --- | --- |"]
             for key in sorted(response.keys()):
-                safe_key = str(key).replace("\n", " ").replace("|", "\\|")
-                safe_value = to_inline(response[key]).replace("\n", " ").replace("|", "\\|")
+                safe_key = str(key).replace("\n", " ").replace("\\", "\\\\").replace("|", "\\|")
+                safe_value = to_inline(response[key]).replace("\n", " ").replace("\\", "\\\\").replace("|", "\\|")
                 lines.append(f"| `{safe_key}` | {safe_value} |")
             return lines
         if isinstance(response, list):
@@ -415,10 +415,10 @@ def format_markdown_output(
                 return ["| Index | Value |", "| --- | --- |", "| 0 | _(empty)_ |"]
             lines = ["| Index | Value |", "| --- | --- |"]
             for idx, item in enumerate(response):
-                safe_value = to_inline(item).replace("\n", " ").replace("|", "\\|")
+                safe_value = to_inline(item).replace("\n", " ").replace("\\", "\\\\").replace("|", "\\|")
                 lines.append(f"| `{idx}` | {safe_value} |")
             return lines
-        safe_value = str(response).replace("\n", " ").replace("|", "\\|")
+        safe_value = str(response).replace("\n", " ").replace("\\", "\\\\").replace("|", "\\|")
         return ["| Value |", "| --- |", f"| `{safe_value}` |"]
 
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
