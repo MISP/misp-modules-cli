@@ -302,10 +302,8 @@ def guess_attribute_types(value: str, valid_types: set[str], supported_input_typ
 
     ranked = sorted(
         [(t, reason, score) for t, (reason, score) in best.items()],
-        key=lambda x: (-x[2], x[0])
+        key=lambda x: (x[0] not in supported_input_types, -x[2], x[0])
     )
-
-    ranked.sort(key=lambda x: (x[0] not in supported_input_types, -x[2], x[0]))
 
     return [(t, reason) for t, reason, _score in ranked]
 
