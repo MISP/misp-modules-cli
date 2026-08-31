@@ -58,7 +58,6 @@ jobs:
           import os
           from pathlib import Path
           from urllib.error import HTTPError
-          from urllib.parse import unquote, urlparse
           from urllib.request import urlopen
 
           project = "misp-modules-cli"
@@ -76,7 +75,7 @@ jobs:
 
           if "existing_filenames" not in locals():
               existing_filenames = {
-                  unquote(Path(urlparse(file_info["url"]).path).name)
+                  file_info["filename"]
                   for files in payload.get("releases", {}).values()
                   for file_info in files
               }
