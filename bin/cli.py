@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+import contextlib
 from datetime import datetime, timezone
+import fcntl
 import ipaddress
 import json
 import os
@@ -558,6 +560,26 @@ def parse_modules_args(values: Optional[List[str]]) -> List[str]:
     return deduped
 
 
+@contextlib.contextmanager
+def locked_file(path: str):
+    """Hold an exclusive advisory lock on a sibling `.lock` file for `path`.
+
+    Serializes concurrent load-modify-save sequences against the same
+    config/cache file across processes so one writer cannot silently
+    clobber another's update.
+    """
+    lock_path = f"{path}.lock"
+    lock_dir = os.path.dirname(lock_path)
+    if lock_dir:
+        os.makedirs(lock_dir, exist_ok=True)
+    with open(lock_path, "a") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
 def load_config(config_path: str) -> Dict[str, Any]:
     if not os.path.exists(config_path):
         return {"modules": {}}
@@ -703,17 +725,18 @@ def configure_module(
         if value:
             updates[key] = value
 
-    config = load_config(config_path)
-    modules_cfg = config.setdefault("modules", {})
-    if not isinstance(modules_cfg, dict):
-        raise RuntimeError(f"Invalid config format in {config_path}: 'modules' must be an object")
-    module_cfg = modules_cfg.setdefault(module_name, {})
-    if not isinstance(module_cfg, dict):
-        module_cfg = {}
-        modules_cfg[module_name] = module_cfg
+    with locked_file(config_path):
+        config = load_config(config_path)
+        modules_cfg = config.setdefault("modules", {})
+        if not isinstance(modules_cfg, dict):
+            raise RuntimeError(f"Invalid config format in {config_path}: 'modules' must be an object")
+        module_cfg = modules_cfg.setdefault(module_name, {})
+        if not isinstance(module_cfg, dict):
+            module_cfg = {}
+            modules_cfg[module_name] = module_cfg
 
-    module_cfg.update(updates)
-    save_config(config_path, config)
+        module_cfg.update(updates)
+        save_config(config_path, config)
 
     log(f"Saved configuration for module '{module_name}' to {config_path}.")
     log("Configured keys:")
@@ -1089,7 +1112,13 @@ def main() -> int:
 
     if cache_dirty:
         try:
-            save_cache(args.cache_file, cache)
+            with locked_file(args.cache_file):
+                # Re-read under the lock and merge our new entries in, so a
+                # concurrent run's writes made after our initial load aren't
+                # clobbered by this save.
+                latest_cache = load_cache(args.cache_file)
+                latest_cache.setdefault("entries", {}).update(cache.get("entries", {}))
+                save_cache(args.cache_file, latest_cache)
         except Exception as e:
             print(f"[!] Unable to save cache file {args.cache_file}: {e}", file=sys.stderr)
             return 1
