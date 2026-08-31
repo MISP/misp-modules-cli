@@ -149,6 +149,8 @@ def is_ipv6(value: str) -> bool:
 
 
 def looks_like_domain(value: str) -> bool:
+    if is_ipv4(value) or is_ipv6(value):
+        return False
     if len(value) > 253 or " " in value or "/" in value or "@" in value:
         return False
     if value.endswith("."):
