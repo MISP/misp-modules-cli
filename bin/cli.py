@@ -156,7 +156,7 @@ def looks_like_domain(value: str) -> bool:
     labels = value.split(".")
     if len(labels) < 2:
         return False
-    label_re = re.compile(r"^[A-Za-z0-9-]{1,63}$")
+    label_re = re.compile(r"^[A-Za-z0-9_-]{1,63}$")
     return all(
         label_re.match(label) and not label.startswith("-") and not label.endswith("-")
         for label in labels
