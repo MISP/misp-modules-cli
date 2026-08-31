@@ -646,12 +646,14 @@ def get_cached_response(
     entries = cache.get("entries", {})
     if not isinstance(entries, dict):
         return None
+    if key not in entries:
+        return None
     entry = entries.get(key)
     if not isinstance(entry, dict):
         return None
     cached_at = entry.get("cached_at")
     response = entry.get("response")
-    if not isinstance(cached_at, int) or response is None:
+    if not isinstance(cached_at, int):
         return None
     if now - cached_at > ttl_seconds:
         return None
