@@ -858,7 +858,8 @@ def main() -> int:
 
     if args.list_supported_types:
         list_supported_types(modules, valid_types, verbose=args.verbose_types)
-        return 0
+        if not args.list_active_modules:
+            return 0
 
     if args.list_active_modules:
         list_active_modules(modules, valid_types, verbose=args.verbose_types)
