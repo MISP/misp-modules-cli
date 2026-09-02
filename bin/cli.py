@@ -1037,12 +1037,13 @@ def main() -> int:
                 include_in_output = args.show_empty_results or not response_is_empty
                 redacted_query_parameters = redact_config_keys(query_parameters)
                 redacted_response = redact_config_keys(response)
+                response_status = "error" if isinstance(response, dict) and "error" in response else "success"
                 if include_in_output:
                     markdown_records.append({
                         "attribute_type": attr_type,
                         "reason": reason,
                         "module": name,
-                        "status": "success",
+                        "status": response_status,
                         "cache": cache_status,
                         "queried_at": queried_at,
                         "query_parameters": redacted_query_parameters,
@@ -1077,6 +1078,12 @@ def main() -> int:
                     "error": str(e),
                     "response": {"error": str(e)},
                 })
+                merged_output["results"].append({
+                    "attribute_type": attr_type,
+                    "reason": reason,
+                    "module": name,
+                    "response": {"error": str(e)},
+                })
             except Exception as e:
                 log(f"query failed: {e}")
                 markdown_records.append({
@@ -1088,6 +1095,12 @@ def main() -> int:
                     "queried_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
                     "query_parameters": redact_config_keys(query_parameters),
                     "error": str(e),
+                    "response": {"error": str(e)},
+                })
+                merged_output["results"].append({
+                    "attribute_type": attr_type,
+                    "reason": reason,
+                    "module": name,
                     "response": {"error": str(e)},
                 })
 
