@@ -149,6 +149,25 @@ def is_ipv6(value: str) -> bool:
         return False
 
 
+def looks_like_ipv6_fragment(value: str) -> bool:
+    """Loosely match IPv6-shaped input (e.g. truncated/partial addresses)
+    without accepting unrelated colon-hex strings such as MAC addresses or
+    HH:MM:SS timestamps, which is_ipv6() correctly rejects."""
+    group_re = re.compile(r"^[A-Fa-f0-9]{1,4}$")
+    if "::" in value:
+        if value.count("::") != 1:
+            return False
+        left, right = value.split("::", 1)
+        groups = [g for g in (left.split(":") if left else []) + (right.split(":") if right else [])]
+        if len(groups) > 7:
+            return False
+        return all(group_re.match(g) for g in groups)
+    groups = value.split(":")
+    if len(groups) != 8:
+        return False
+    return all(group_re.match(g) for g in groups)
+
+
 def looks_like_domain(value: str) -> bool:
     if len(value) > 253 or " " in value or "/" in value or "@" in value:
         return False
@@ -292,7 +311,7 @@ def guess_attribute_types(value: str, valid_types: set[str], supported_input_typ
         add("domain", "looks like a domain name", 85)
         add("hostname", "looks like a hostname", 80)
 
-    if re.match(r"^[A-Fa-f0-9:]+$", v) and ":" in v:
+    if looks_like_ipv6_fragment(v):
         add("ip-src", "contains ':' and resembles IPv6", 50)
         add("ip-dst", "contains ':' and resembles IPv6", 50)
 
