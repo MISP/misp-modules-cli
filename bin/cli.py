@@ -576,8 +576,9 @@ def load_config(config_path: str) -> Dict[str, Any]:
 def save_config(config_path: str, config: Dict[str, Any]) -> None:
     config_dir = os.path.dirname(config_path)
     if config_dir:
-        os.makedirs(config_dir, exist_ok=True)
-    with open(config_path, "w", encoding="utf-8") as f:
+        os.makedirs(config_dir, mode=0o700, exist_ok=True)
+    fd = os.open(config_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2, sort_keys=True)
         f.write("\n")
 
@@ -611,8 +612,9 @@ def load_cache(cache_path: str) -> Dict[str, Any]:
 def save_cache(cache_path: str, cache: Dict[str, Any]) -> None:
     cache_dir = os.path.dirname(cache_path)
     if cache_dir:
-        os.makedirs(cache_dir, exist_ok=True)
-    with open(cache_path, "w", encoding="utf-8") as f:
+        os.makedirs(cache_dir, mode=0o700, exist_ok=True)
+    fd = os.open(cache_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2, sort_keys=True)
         f.write("\n")
 
