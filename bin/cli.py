@@ -1091,6 +1091,13 @@ def main() -> int:
                     "response": {"error": str(e)},
                 })
 
+    if cache_dirty:
+        try:
+            save_cache(args.cache_file, cache)
+        except Exception as e:
+            print(f"[!] Unable to save cache file {args.cache_file}: {e}", file=sys.stderr)
+            return 1
+
     if args.unified_output and not suppress_standard_json_output:
         print(json.dumps(merged_output, indent=2, sort_keys=True))
 
@@ -1105,16 +1112,13 @@ def main() -> int:
         if args.markdown_output == "-":
             print(markdown_report)
         else:
-            with open(args.markdown_output, "w", encoding="utf-8") as f:
-                f.write(markdown_report)
-            log(f"Wrote markdown report to {args.markdown_output}")
-
-    if cache_dirty:
-        try:
-            save_cache(args.cache_file, cache)
-        except Exception as e:
-            print(f"[!] Unable to save cache file {args.cache_file}: {e}", file=sys.stderr)
-            return 1
+            try:
+                with open(args.markdown_output, "w", encoding="utf-8") as f:
+                    f.write(markdown_report)
+                log(f"Wrote markdown report to {args.markdown_output}")
+            except OSError as e:
+                print(f"[!] Unable to write markdown report to {args.markdown_output}: {e}", file=sys.stderr)
+                return 1
 
     if not any_queried:
         log("\nNo module query was executed successfully.")
