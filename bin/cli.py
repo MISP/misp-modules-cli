@@ -66,9 +66,8 @@ def is_empty_module_response(response: Any) -> bool:
 def redact_config_keys(value: Any) -> Any:
     if isinstance(value, dict):
         return {
-            k: redact_config_keys(v)
+            k: ("<redacted>" if k == "config" else redact_config_keys(v))
             for k, v in value.items()
-            if k != "config"
         }
     if isinstance(value, list):
         return [redact_config_keys(item) for item in value]
