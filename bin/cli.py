@@ -432,7 +432,7 @@ def format_markdown_output(
             return lines
         if isinstance(response, list):
             if not response:
-                return ["| Index | Value |", "| --- | --- |", "| 0 | _(empty)_ |"]
+                return ["| Index | Value |", "| --- | --- |", "| _(empty)_ |  |"]
             lines = ["| Index | Value |", "| --- | --- |"]
             for idx, item in enumerate(response):
                 safe_value = to_inline(item).replace("\n", " ").replace("|", "\\|")
