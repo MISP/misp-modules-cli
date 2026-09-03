@@ -17,7 +17,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MISP/misp-modules"
+Homepage = "https://github.com/MISP/misp-modules-cli"
+Repository = "https://github.com/MISP/misp-modules-cli"
+Issues = "https://github.com/MISP/misp-modules-cli/issues"
 
 [project.scripts]
 misp-modules-cli = "bin.cli:main"
