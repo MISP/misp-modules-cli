@@ -138,7 +138,7 @@ python3 bin/cli.py --config-file /path/to/config.json ...
 - `--raw` – print raw JSON responses.
 - `--show-empty-results` – include empty module responses in output (hidden by default).
 - `--unified-output` – print one merged JSON object containing all module query results.
-- `--markdown-output [PATH]` – print a markdown report (or write it to `PATH`) with summary, query timestamps, query parameters, and responses.
+- `--markdown-output [PATH]` – print a markdown report (or write it to `PATH`) with summary, query timestamps, query parameters, and responses. When the report goes to stdout (no `PATH`, or `PATH` is `-`), the standard JSON output (`--raw`/`--unified-output`) is suppressed to avoid mixing formats; when `PATH` is a file, the standard JSON output is still printed to stdout as usual.
 - `--module` – limit queries to specific module name(s).
 - `--cache-file` – cache file path for module responses.
 - `--cache-ttl-seconds` – cache TTL in seconds (default: `43200`, i.e. 12 hours).
