@@ -856,6 +856,12 @@ def main() -> int:
     args = parser.parse_args()
     suppress_standard_json_output = args.markdown_output is not None
 
+    if args.verbose_types and not (args.list_supported_types or args.list_active_modules):
+        print(
+            "[!] --verbose-types has no effect without --list-supported-types or --list-active-modules",
+            file=sys.stderr,
+        )
+
     if args.cache_ttl_seconds < 0:
         print("[!] --cache-ttl-seconds must be >= 0", file=sys.stderr)
         return 1
