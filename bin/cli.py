@@ -648,6 +648,27 @@ def purge_cache(cache_path: str) -> int:
     return 0
 
 
+def get_describe_types(describe_types_url: str, cache_path: str, cache_ttl_seconds: int) -> Dict[str, Any]:
+    """Fetch MISP's describeTypes.json, reusing a cached copy within the TTL to avoid
+    hitting raw.githubusercontent.com on every invocation."""
+    cache_key = f"describe_types:{describe_types_url}"
+    now = int(time.time())
+    try:
+        cache = load_cache(cache_path)
+    except Exception:
+        cache = {"entries": {}}
+    cached = get_cached_response(cache, cache_key, now, cache_ttl_seconds)
+    if cached is not None:
+        return cached["response"]
+    describe_types = fetch_describe_types(describe_types_url)
+    cache.setdefault("entries", {})[cache_key] = {"cached_at": now, "response": describe_types}
+    try:
+        save_cache(cache_path, cache)
+    except Exception:
+        pass
+    return describe_types
+
+
 def make_cache_key(base_url: str, module_name: str, attr_type: str, value: str, module_config: Dict[str, Any]) -> str:
     key_payload = {
         "base_url": base_url.rstrip("/"),
@@ -870,9 +891,19 @@ def main() -> int:
         return 1
 
     valid_types = set()
-    if args.list_supported_types or args.verbose_types or not args.list_active_modules:
+    need_describe_types = args.list_supported_types or args.verbose_types or not args.list_active_modules
+    # A fully explicit --type query doesn't need MISP's describeTypes.json (fetched from
+    # raw.githubusercontent.com) to know what to do, so skip that network dependency and
+    # trust the user-provided type in that case.
+    skip_for_explicit_type = (
+        need_describe_types
+        and args.attr_type
+        and not args.list_supported_types
+        and not args.list_active_modules
+    )
+    if need_describe_types and not skip_for_explicit_type:
         try:
-            describe_types = fetch_describe_types(args.describe_types_url)
+            describe_types = get_describe_types(args.describe_types_url, args.cache_file, args.cache_ttl_seconds)
             valid_types = get_valid_types(describe_types)
         except Exception as e:
             print(f"[!] Unable to fetch describeTypes.json: {e}", file=sys.stderr)
@@ -943,10 +974,11 @@ def main() -> int:
             log("No likely MISP attribute type could be guessed from the input.")
             return 1
 
-    candidate_types = [(t, r) for t, r in candidate_types if t in valid_types]
-    if not candidate_types:
-        log("No valid MISP attribute type found.")
-        return 1
+    if valid_types:
+        candidate_types = [(t, r) for t, r in candidate_types if t in valid_types]
+        if not candidate_types:
+            log("No valid MISP attribute type found.")
+            return 1
 
     if not args.attr_type and not args.all_guesses:
         candidate_types = candidate_types[:1]
