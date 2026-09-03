@@ -926,6 +926,8 @@ def main() -> int:
 
     if args.attr_type:
         candidate_types = [(args.attr_type, "explicitly provided by user")]
+        if args.show_guesses:
+            log("--show-guesses skipped: --type was explicitly provided, so no guessing was performed.")
     else:
         candidate_types = guess_attribute_types(args.value, valid_types, supported_input_types)
 
