@@ -911,15 +911,15 @@ def main() -> int:
     if selected_modules:
         available_modules = {
             m.get("name")
-            for m in modules
+            for m in get_expansion_modules(modules)
             if isinstance(m.get("name"), str)
         }
         missing_modules = [m for m in selected_modules if m not in available_modules]
         if missing_modules:
             print(
-                "[!] Unknown module name(s): "
+                "[!] Unknown expansion module name(s): "
                 + ", ".join(sorted(missing_modules))
-                + ". Use /modules introspection to list available names.",
+                + ". Use /modules introspection to list available expansion module names.",
                 file=sys.stderr,
             )
             return 1
