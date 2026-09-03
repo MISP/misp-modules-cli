@@ -76,8 +76,10 @@ def redact_config_keys(value: Any) -> Any:
 
 
 def get_valid_types(describe_types: Dict[str, Any]) -> set[str]:
-    types = describe_types.get("types", [])
-    return set(types) if isinstance(types, list) else set()
+    types = describe_types.get("types")
+    if not isinstance(types, list) or not types:
+        raise RuntimeError("describeTypes.json 'types' field is missing, empty, or not a list")
+    return set(types)
 
 
 def get_expansion_modules(modules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
