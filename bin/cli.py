@@ -243,6 +243,8 @@ def looks_like_filename_hash(value: str) -> Tuple[bool, List[str]]:
         candidates.append("filename|sha1")
     if looks_like_sha256(right):
         candidates.append("filename|sha256")
+    if looks_like_sha512(right):
+        candidates.append("filename|sha512")
     return (len(candidates) > 0), candidates
 
 
