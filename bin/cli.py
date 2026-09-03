@@ -113,16 +113,16 @@ def get_type_to_modules_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str
 
 
 def get_module_to_types_map(modules: List[Dict[str, Any]]) -> Dict[str, List[str]]:
-    mapping: Dict[str, List[str]] = {}
+    mapping: Dict[str, set[str]] = {}
     for module in get_expansion_modules(modules):
         name = module.get("name", "<unknown>")
         mispattributes = module.get("mispattributes", {})
         inputs = mispattributes.get("input", [])
+        types = mapping.setdefault(name, set())
         if not isinstance(inputs, list):
-            mapping.setdefault(name, [])
             continue
-        mapping[name] = sorted({t for t in inputs if isinstance(t, str)})
-    return dict(sorted(mapping.items()))
+        types.update(t for t in inputs if isinstance(t, str))
+    return {name: sorted(types) for name, types in sorted(mapping.items())}
 
 
 def find_modules_for_type(modules: List[Dict[str, Any]], attr_type: str) -> List[Dict[str, Any]]:
