@@ -695,7 +695,8 @@ def configure_module(
     modules: List[Dict[str, Any]],
     config_path: str,
     module_name: str,
-    set_values: Dict[str, str]
+    set_values: Dict[str, str],
+    non_interactive: bool = False
 ) -> int:
     module = next((m for m in modules if m.get("name") == module_name), None)
     if module is None:
@@ -706,6 +707,21 @@ def configure_module(
     if not config_keys:
         log(f"Module '{module_name}' does not declare configurable settings via introspection.")
         return 0
+
+    unknown_keys = sorted(k for k in set_values if k not in config_keys)
+    if unknown_keys:
+        raise ValueError(
+            f"Unknown --set key(s) for module '{module_name}': {', '.join(unknown_keys)}. "
+            f"Valid keys: {', '.join(sorted(config_keys))}"
+        )
+
+    if non_interactive:
+        missing_keys = sorted(key for key in config_keys if key not in set_values)
+        if missing_keys:
+            raise ValueError(
+                f"--non-interactive requires --set for missing key(s) for module "
+                f"'{module_name}': {', '.join(missing_keys)}"
+            )
 
     updates: Dict[str, str] = {}
     for key in config_keys:
@@ -831,6 +847,12 @@ def main() -> int:
         help="With --configure-module, provide KEY=VALUE (can be repeated) to avoid prompts",
     )
     parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="With --configure-module, fail immediately (instead of prompting) if any "
+        "required key is missing from --set; suitable for cron/unattended use",
+    )
+    parser.add_argument(
         "--module",
         action="append",
         dest="modules",
@@ -889,7 +911,10 @@ def main() -> int:
     if args.configure_module:
         try:
             set_values = parse_set_args(args.set)
-            return configure_module(modules, args.config_file, args.configure_module, set_values)
+            return configure_module(
+                modules, args.config_file, args.configure_module, set_values,
+                non_interactive=args.non_interactive
+            )
         except Exception as e:
             print(f"[!] Unable to configure module: {e}", file=sys.stderr)
             return 1
